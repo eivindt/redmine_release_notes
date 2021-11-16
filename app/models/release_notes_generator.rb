@@ -126,6 +126,7 @@ class ReleaseNotesGenerator
     values = {
       "subject" => issue.subject,
       "release_notes" => issue.release_note ? issue.release_note.text : "",
+      "release_notes_indented" => issue.release_note ? "  " + issue.release_note.text.lines.join("  ") : "\n",
       "tracker" => issue.tracker.name,
       "project" => issue.project.name,
       "category" => issue.category ? issue.category.name : "",
