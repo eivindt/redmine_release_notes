@@ -15,22 +15,13 @@
 # redmine_release_notes. If not, see <http://www.gnu.org/licenses/>.
 
 require 'redmine'
-require 'redmine_release_notes/hooks'
-
-ActiveSupport::Reloader.to_prepare do
-  # Patches to the Redmine core.
-  patched_classes = %w(issue issues_controller settings_controller version)
-  patched_classes.each do |core_class|
-    require_dependency core_class
-    "RedmineReleaseNotes::#{core_class.camelize}Patch".constantize.perform
-  end
-end
+require File.expand_path('../lib/redmine_release_notes/hooks', __FILE__)
 
 Redmine::Plugin.register :redmine_release_notes do
   name 'Redmine release notes plugin'
-  author 'Harry Garrood'
+  author 'Harry Garrood/Eivind Tagseth'
   description 'A plugin for managing release notes.'
-  version '1.4.3'
+  version '1.5.0'
   author_url 'https://github.com/hdgarrood'
   requires_redmine :version_or_higher => '2.1.0'
 
@@ -50,5 +41,11 @@ Redmine::Plugin.register :redmine_release_notes do
       { :release_notes => [:index, :new, :generate] },
       :public => true
   end
+end
 
+# Patches to the Redmine core.
+patched_classes = %w(issue issues_controller settings_controller version)
+patched_classes.each do |core_class|
+   require core_class
+   "RedmineReleaseNotes::#{core_class.camelize}Patch".constantize.perform
 end
