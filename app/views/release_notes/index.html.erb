@@ -6,7 +6,7 @@
 <div id="roadmap">
 <% @versions.each do |version| %>
   <h3 class="version"><%= link_to_version version %></h3>
-  <%= render :partial => 'release_notes/overview', :locals => {:version => version} %>
+  <%= render :partial => 'release_notes/dashboard', :locals => {:version => version} %>
 <% end %>
 </div>
 <% end %>
