@@ -21,7 +21,6 @@ module RedmineReleaseNotes
       base.send(:include, InstanceMethods)
 
       base.class_eval do
-        unloadable
         after_action :add_releasenotes_fields, :only => [:index, :show]
       end
     end
@@ -59,5 +58,3 @@ module RedmineReleaseNotes
     end
   end
 end
-
-IssuesController.send(:include, RedmineReleaseNotes::IssuesControllerPatch) unless IssuesController.included_modules.include? RedmineReleaseNotes::IssuesControllerPatch

@@ -15,7 +15,6 @@
 # redmine_release_notes. If not, see <http://www.gnu.org/licenses/>.
 
 class ReleaseNotesController < ApplicationController
-  unloadable
 
   before_action :find_version, :only => [:generate]
   before_action :find_project, :only => [:index]
