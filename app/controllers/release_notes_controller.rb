@@ -18,6 +18,9 @@ class ReleaseNotesController < ApplicationController
 
   before_action :find_version, :only => [:generate]
   before_action :find_project, :only => [:index]
+  before_action :find_issue_and_authorize, :only => [:create, :update]
+
+  accept_api_auth :create, :update
 
   helper :projects
 
@@ -35,31 +38,17 @@ class ReleaseNotesController < ApplicationController
     render_404
   end
 
-  # we only expect this to be called with :format => :js
+  # called with :format => :js from the issue page, or over the REST API.
+  # Over the API this creates or replaces the issue's release note.
   def create
-    @issue = Issue.find(params[:release_note][:issue_id])
-    @release_note = @issue.build_release_note
-    @release_note.text = params[:release_note][:text]
-
-    if @release_note.save
-      update_custom_field(params[:mark_completed])
-    end
-
-    render 'update'
+    @release_note = @issue.release_note || @issue.build_release_note
+    save_release_note
   end
 
-  # we only expect this to be called with :format => :js
   def update
-    @issue = Issue.find(params[:release_note][:issue_id])
     @release_note = @issue.release_note
-    @release_note.text = params[:release_note][:text]
-
-    if @release_note.save
-      update_custom_field(params[:mark_completed])
-    end
-
-  rescue ActiveRecord::RecordNotFound
-    render_404
+    return render_404 unless @release_note
+    save_release_note
   end
 
   def view
@@ -110,6 +99,33 @@ class ReleaseNotesController < ApplicationController
   end
 
   private
+  def find_issue_and_authorize
+    @issue = Issue.find((params[:release_note] || {})[:issue_id])
+    deny_access unless User.current.allowed_to?(:edit_issues, @issue.project)
+  rescue ActiveRecord::RecordNotFound
+    render_404
+  end
+
+  def save_release_note
+    created = @release_note.new_record?
+    @release_note.text = params[:release_note][:text]
+
+    if @release_note.save
+      update_custom_field(params[:mark_completed])
+    end
+
+    respond_to do |format|
+      format.js { render 'update' }
+      format.api do
+        if @release_note.errors.any?
+          render_validation_errors(@release_note)
+        else
+          render :action => 'show', :status => (created ? :created : :ok)
+        end
+      end
+    end
+  end
+
   def find_version
     @version = Version.find(params[:id])
   rescue ActiveRecord::RecordNotFound
