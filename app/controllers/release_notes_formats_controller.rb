@@ -41,7 +41,7 @@ class ReleaseNotesFormatsController < ApplicationController
   def update
     params.permit!
     @format = ReleaseNotesFormat.find(params[:id])
-    if @format.update_attributes(params[:release_notes_format])
+    if @format.update(params[:release_notes_format])
       flash[:notice] = l(:notice_successful_update)
       redirect_to release_notes_formats_tab_path
     else
@@ -63,6 +63,6 @@ class ReleaseNotesFormatsController < ApplicationController
     format = ReleaseNotesFormat.new(params[:release_notes_format])
     version = ReleaseNotesGenerator::MockVersion.new
     @text = ReleaseNotesGenerator.new(version, format).generate
-    render :text => @text
+    render :plain => @text
   end
 end

@@ -17,6 +17,8 @@
 module RedmineReleaseNotes
   module SettingsControllerPatch
     def self.perform
+      return if SettingsController.method_defined?(:plugin_without_release_notes_patch)
+
       SettingsController.class_eval do
         helper 'release_notes_settings'
 

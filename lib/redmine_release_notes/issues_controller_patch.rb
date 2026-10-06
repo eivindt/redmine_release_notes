@@ -21,7 +21,6 @@ module RedmineReleaseNotes
       base.send(:include, InstanceMethods)
 
       base.class_eval do
-        unloadable
         after_action :add_releasenotes_fields, :only => [:index, :show]
       end
     end
@@ -49,7 +48,7 @@ module RedmineReleaseNotes
             body = JSON.parse(jsonp.present? ? response.body.sub("#{jsonp}(", "").chop : response.body)
             (body['issues'] || [body['issue']]).each{|j_issue|
               issue = Issue.find(j_issue['id'])
-              next unless issue.release_notes_done?
+              next unless issue.release_notes_done? && issue.release_note
               j_issue['release_note'] = issue.release_note.text
             }
             response.body = jsonp.present? ? "#{jsonp}(#{body.to_json})" : body.to_json

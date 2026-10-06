@@ -14,25 +14,13 @@
 # You should have received a copy of the GNU General Public License along with
 # redmine_release_notes. If not, see <http://www.gnu.org/licenses/>.
 
-require 'redmine'
-require 'redmine_release_notes/hooks'
-
-ActiveSupport::Reloader.to_prepare do
-  # Patches to the Redmine core.
-  patched_classes = %w(issue issues_controller settings_controller version)
-  patched_classes.each do |core_class|
-    require_dependency core_class
-    "RedmineReleaseNotes::#{core_class.camelize}Patch".constantize.perform
-  end
-end
-
 Redmine::Plugin.register :redmine_release_notes do
   name 'Redmine release notes plugin'
-  author 'Harry Garrood'
+  author 'Harry Garrood/Eivind Tagseth'
   description 'A plugin for managing release notes.'
-  version '1.3.1'
+  version '2.0.0'
   author_url 'https://github.com/hdgarrood'
-  requires_redmine :version_or_higher => '2.1.0'
+  requires_redmine :version_or_higher => '4.1.0'
 
   # the partial won't be used, but can't be blank, because Redmine needs to
   # think this plugin is configurable
@@ -50,5 +38,36 @@ Redmine::Plugin.register :redmine_release_notes do
       { :release_notes => [:index, :new, :generate] },
       :public => true
   end
+end
 
+apply_release_notes_patches = lambda do
+  RedmineReleaseNotes::IssuePatch.perform
+  RedmineReleaseNotes::VersionPatch.perform
+  RedmineReleaseNotes::SettingsControllerPatch.perform
+  RedmineReleaseNotes::IssuesControllerPatch.perform
+  unless IssuesController.include?(RedmineReleaseNotes::IssuesControllerPatch)
+    IssuesController.include(RedmineReleaseNotes::IssuesControllerPatch)
+  end
+end
+
+if Redmine::VERSION::MAJOR >= 6
+  # Redmine 6+ (Zeitwerk): init.rb is re-run inside to_prepare on every code
+  # reload, and the plugin's lib/ directory is on the autoload path, so the
+  # patches can be applied directly here.
+  apply_release_notes_patches.call
+
+  # Referencing the hook listener forces the autoloader to load it so the
+  # view hooks are registered also in development mode
+  RedmineReleaseNotes::Hooks
+else
+  # Redmine 4/5: init.rb runs once, so (re)apply the patches on every reload.
+  require 'redmine_release_notes/hooks'
+
+  ActiveSupport::Reloader.to_prepare do
+    %w(issue issues_controller settings_controller version).each do |core_class|
+      require_dependency core_class
+      require_dependency "redmine_release_notes/#{core_class}_patch"
+    end
+    apply_release_notes_patches.call
+  end
 end

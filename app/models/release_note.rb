@@ -15,7 +15,6 @@
 # redmine_release_notes. If not, see <http://www.gnu.org/licenses/>.
 
 class ReleaseNote < ActiveRecord::Base
-  unloadable
   belongs_to :issue
 
   # the trackers which can have release notes

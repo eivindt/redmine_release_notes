@@ -1,6 +1,11 @@
 release notes
 =============
 
+v1.5.0
+------
+
+* Updates in order to support redmine 5
+
 v1.3.1
 ------
 
