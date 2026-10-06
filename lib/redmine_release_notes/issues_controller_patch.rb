@@ -58,3 +58,5 @@ module RedmineReleaseNotes
     end
   end
 end
+
+IssuesController.send(:include, RedmineReleaseNotes::IssuesControllerPatch) unless IssuesController.included_modules.include? RedmineReleaseNotes::IssuesControllerPatch
